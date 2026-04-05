@@ -5,7 +5,7 @@ def setup_database():
     connection = sqlite3.connect("wallet.db")
     cursor = connection.cursor()
 
-    # 1. Create the Wallet table
+    # 1. The 'wallets' table (The Balances)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS wallets (
             username TEXT PRIMARY KEY,
@@ -13,11 +13,22 @@ def setup_database():
         )
     """)
 
-    # 2. Add a starting user if they don't exist
-    cursor.execute("INSERT OR IGNORE INTO wallets VALUES ('alice', 100)")
+    # 2. The 'idempotency_keys' table (The API Memory)
+    # This records every successful transaction signature.
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS idempotency_keys (
+            id_key TEXT PRIMARY KEY,
+            response_body TEXT,
+            status_code INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    # Add Alice if she's not there (Starting balance: 10000 pence [£100])
+    cursor.execute("INSERT OR IGNORE INTO wallets VALUES ('alice', 10000)")
     
     connection.commit()
-    print("Database ready! Alice has £100.")
+    print("Database updated! Both tables are ready and Alice is funded.")
     connection.close()
 
 if __name__ == "__main__":
